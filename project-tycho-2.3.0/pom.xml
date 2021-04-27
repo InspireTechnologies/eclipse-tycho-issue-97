@@ -1,0 +1,120 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<parent>
+		<groupId>bugs.tycho</groupId>
+		<artifactId>parent</artifactId>
+		<version>1.30-SNAPSHOT</version>
+		<relativePath />
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>root</artifactId>
+	<packaging>pom</packaging>
+	<name>Project Root</name>
+	<version>${revision}${changelist}</version>
+
+	<modules>
+	</modules>
+
+	<profiles>
+		<profile>
+			<id>escrow-prepare</id>
+			<activation>
+				<property>
+					<name>!nobug</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>copy-parent</id>
+								<phase>validate</phase>
+								<goals>
+									<goal>copy</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/parent</outputDirectory>
+									<overWriteReleases>false</overWriteReleases>
+									<overWriteSnapshots>true</overWriteSnapshots>
+									<artifactItems>
+										<artifactItem>
+											<groupId>bugs.tycho</groupId>
+											<artifactId>parent</artifactId>
+											<version>${project.parent.version}</version>
+											<type>pom</type>
+										</artifactItem>
+										<artifactItem>
+											<groupId>bugs.tycho</groupId>
+											<artifactId>parent</artifactId>
+											<version>${project.parent.version}</version>
+											<classifier>site</classifier>
+											<type>xml</type>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-deploy-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>deploy-parent</id>
+								<phase>validate</phase>
+								<goals>
+									<goal>deploy-file</goal>
+								</goals>
+								<configuration>
+									<repositoryId>central</repositoryId>
+									<url>file://${basedir}/target/escrow-repo</url>
+									<groupId>bugs.tycho</groupId>
+									<artifactId>parent</artifactId>
+									<version>${project.parent.version}</version>
+									<classifier>site</classifier>
+									<packaging>xml</packaging>
+									<file>${project.build.directory}/parent/parent-${project.parent.version}-site.xml</file>
+									<pomFile>${project.build.directory}/parent/parent-${project.parent.version}.pom</pomFile>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>use-snapshot-parent</id>
+			<activation>
+				<file>
+					<exists>target/escrow-repo</exists>
+				</file>
+			</activation>
+			<repositories>
+				<repository>
+					<id>escrow-local</id>
+					<name>Local Escrow Repository</name>
+					<snapshots>
+						<enabled>true</enabled>
+						<updatePolicy>always</updatePolicy>
+					</snapshots>
+					<url>file:target/escrow-repo</url>
+				</repository>
+			</repositories>
+		</profile>
+	</profiles>
+
+	<properties>
+		<revision>10.0.0</revision>
+		<changelist>-SNAPSHOT</changelist>
+
+		<!--  BEGIN: Overwrite versions of parent 1.30 -->
+		<!--
+		<version.plugin.tycho>2.1.0</version.plugin.tycho>
+		-->
+		<!--  END: Overwrite versions of parent -->
+	</properties>
+
+</project>
